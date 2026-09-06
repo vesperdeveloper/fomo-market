@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+/* ============================================================
+   fomo market — design system
+   Lifted from the fomo app shell: a near-black violet ground
+   (#06050F), panels a step above it, hairline white borders,
+   one periwinkle accent (#606AF7), and green/orange for money.
+   Dark only — fomo has no light mode, so neither do we.
+   ============================================================ */
+
+@font-face {
+  font-family: "Switzer";
+  src: url("/fonts/switzer-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Switzer";
+  src: url("/fonts/switzer-500.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Switzer";
+  src: url("/fonts/switzer-600.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Switzer";
+  src: url("/fonts/switzer-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --hue: 268;
+
+  /* the ground and everything stacked on it. Every step keeps a
+     trace of violet so panels sit with the accent, never against it */
+  --n-0:  #06050f;
+  --n-1:  #0b0a15;
+  --n-2:  #12111a;
+  --n-3:  #191823;
+  --n-4:  #22212e;
+  --n-5:  #2e2d3c;
+  --n-6:  #4a4959;
+  --n-7:  #6b6a7b;
+  --n-8:  #8f8e9e;
+  --n-9:  #c6c5d0;
+  --n-10: #f7f7f7;
+
+  --fg:             #f7f7f7;
+  --fg-muted:       #9997ab;
+  --fg-faint:       #6b6a7b;
+  --surface:        var(--n-0);
+  --surface-raised: #0c0b14;
+  --surface-sunken: #040309;
+  --surface-hover:  var(--n-2);
+
+  --accent:          #606af7;
+  --accent-hover:    #7b83ff;
+  --accent-quiet:    rgba(96, 106, 247, .14);
+  --accent-contrast: #ffffff;
+  --accent-ring:     rgba(96, 106, 247, .45);
+
+  --up:         #26d07c;
+  --up-quiet:   rgba(38, 208, 124, .12);
+  --down:       #f1553c;
+  --down-quiet: rgba(241, 85, 60, .12);
+
+  --border-subtle: rgba(255, 255, 255, .07);
+  --border-strong: rgba(255, 255, 255, .15);
+
+  /* on a black ground a shadow is invisible, so elevation is carried
+     by the border and a soft violet bloom instead */
+  --shadow-1: 0 1px 2px rgba(0,0,0,.5);
+  --shadow-2: 0 1px 2px rgba(0,0,0,.5), 0 4px 12px -6px rgba(0,0,0,.7);
+  --shadow-3: 0 2px 6px rgba(0,0,0,.55), 0 12px 28px -12px rgba(0,0,0,.8);
+  --shadow-4: 0 4px 10px rgba(0,0,0,.55), 0 24px 48px -20px rgba(0,0,0,.9);
+  --shadow-5: 0 8px 20px rgba(0,0,0,.6), 0 40px 80px -28px rgba(0,0,0,.95);
+  --shadow-accent: 0 6px 24px -6px rgba(96,106,247,.55);
+  --glow: 0 0 0 1px rgba(96,106,247,.35), 0 0 40px -8px rgba(96,106,247,.5);
+
+  /* radii + spacing */
+  --r-xs: 4px; --r-sm: 8px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px; --r-full: 9999px;
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px;
+  --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px; --s-20: 80px;
+  --s-24: 96px; --s-32: 128px; --s-40: 160px; --s-48: 192px;
+  --gutter: clamp(16px, 4vw, 48px);
+  --section-y: clamp(64px, 9vw, 144px);
+  --nav-h: 64px;
+
+  /* fluid type */
+  --step--1: clamp(.8125rem, .79rem + .11vw, .875rem);
+  --step-0:  clamp(.9375rem, .91rem + .14vw, 1rem);
+  --step-1:  clamp(1.0625rem, 1.01rem + .28vw, 1.25rem);
+  --step-2:  clamp(1.25rem, 1.15rem + .5vw, 1.625rem);
+  --step-3:  clamp(1.5rem, 1.33rem + .85vw, 2.125rem);
+  --step-4:  clamp(1.875rem, 1.6rem + 1.35vw, 2.75rem);
+  --step-5:  clamp(2.25rem, 1.83rem + 2.1vw, 3.5rem);
+  --step-6:  clamp(3rem, 2rem + 5vw, 6.5rem);
+
+  --font-display: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --ease-reveal: cubic-bezier(.16, 1, .3, 1);
+  --ease-ui:     cubic-bezier(.32, .72, 0, 1);
+  --ease-draw:   cubic-bezier(.65, 0, .35, 1);
+  --ease-lift:   cubic-bezier(.22, .61, .24, 1);
+  --dur-micro: .15s; --dur-state: .22s; --dur-hover: .28s;
+  --dur-enter: .42s; --dur-settle: .45s; --dur-fill: 1s; --dur-draw: 1.4s;
+}
+
+* { box-sizing: border-box; }
+
+html { color-scheme: dark; background: var(--surface); }
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* fomo sets headings at 500 with a hard negative track — the wordmark
+   and the hero line are the same shape, only bigger */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: 1.02;
+  margin: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+
+::selection { background: var(--accent-quiet); color: var(--fg); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--n-4); border-radius: 8px; border: 3px solid var(--surface); }
+::-webkit-scrollbar-thumb:hover { background: var(--n-5); }
+
+.num { font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+.wrap { width: 100%; max-width: 1240px; margin-inline: auto; padding-inline: var(--gutter); }
+.wrap-wide { width: 100%; max-width: 1600px; margin-inline: auto; padding-inline: var(--gutter); }
+
+.eyebrow {
+  font-size: .6875rem; font-weight: 500; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--fg-faint);
+}
+
+/* the fomo wordmark: lowercase, medium, tracked in hard */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -.06em;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+/* a panel: the app's basic surface — one step up from the ground,
+   hairline border, no shadow to speak of */
+.panel {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+}
+
+.lift {
+  transition: transform var(--dur-hover) var(--ease-lift),
+              background var(--dur-hover) var(--ease-lift),
+              border-color var(--dur-hover) var(--ease-lift);
+}
+.lift:hover { transform: translateY(-2px); border-color: var(--border-strong); }
+
+/* row hover in the rails and tables — fomo lights the whole row */
+.row-hit { transition: background var(--dur-micro) var(--ease-ui); }
+.row-hit:hover { background: var(--surface-hover); }
+
+.reveal { opacity: 0; transform: translateY(18px); }
+.reveal.in {
+  opacity: 1; transform: none;
+  transition: opacity var(--dur-enter) var(--ease-reveal),
+              transform var(--dur-enter) var(--ease-reveal);
+}
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.spark-line {
+  stroke-dasharray: var(--len); stroke-dashoffset: var(--len);
+  animation: draw var(--dur-draw) var(--ease-draw) forwards;
+}
+@keyframes fadeArea { from { opacity: 0 } to { opacity: 1 } }
+.spark-area { animation: fadeArea var(--dur-fill) var(--ease-draw) forwards; opacity: 0; }
+
+@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee-track { animation: marquee 48s linear infinite; will-change: transform; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1) }
+  50%      { opacity: .45; transform: scale(.82) }
+}
+.live-dot { animation: pulse-dot 2.4s var(--ease-ui) infinite; }
+
+/* the periwinkle bloom fomo puts behind its device shots */
+@keyframes bloom {
+  0%, 100% { opacity: .55 }
+  50%      { opacity: .85 }
+}
+.bloom { animation: bloom 6s var(--ease-ui) infinite; }
+
+.profile-banner {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .profile-banner { height: 224px; }
+}
+
+.profile-stats {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 24px;
+  border-block: 1px solid var(--border-subtle);
+  padding-block: 20px;
+}
+@media (min-width: 640px)  { .profile-stats { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .profile-stats { grid-template-columns: repeat(6, 1fr); } }
+
+.profile-chart-card {
+  margin-top: 32px;
+  padding: 20px 24px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+}
+@media (min-width: 640px) {
+  .profile-chart-card { padding: 24px; }
+}
+
+/* a board row: rank, avatar, account, spark, money, quotes. The columns are
+   in the stylesheet rather than inline so the phone can drop the ones that
+   do not fit instead of letting them collide. */
+.board-row {
+  display: grid;
+  grid-template-columns: 22px 42px minmax(0, 1fr) 96px 120px auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 12px var(--s-4);
+}
+@media (max-width: 900px) {
+  .board-row { grid-template-columns: 20px 38px minmax(0, 1fr) auto; }
+  .board-row .list-spark { display: none !important; }
+}
+@media (max-width: 560px) {
+  .board-row { grid-template-columns: 36px minmax(0, 1fr) auto; padding: 12px var(--s-3); }
+  .board-row .list-rank { display: none !important; }
+  .board-row .list-quotes { display: none !important; }
+}
+
+/* app shell: rail | board | ticket, collapsing to one column */
+.app-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-4);
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  .app-shell { grid-template-columns: 288px minmax(0, 1fr); }
+}
+@media (min-width: 1440px) {
+  .app-shell { grid-template-columns: 288px minmax(0, 1fr) 340px; }
+}
+
+input, textarea, select, button { font-family: inherit; }
+
+input::placeholder { color: var(--fg-faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}

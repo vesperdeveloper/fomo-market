@@ -1,0 +1,30 @@
+{
+  "name": "fomomarket",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3081",
+    "build": "next build",
+    "start": "next start",
+    "keeper": "KEEPER_SECRET=$(cat .keeper-secret) node scripts/keeper.mjs",
+    "keeper:login": "node scripts/keeper.mjs --login",
+    "keeper:once": "KEEPER_SECRET=$(cat .keeper-secret) node scripts/keeper.mjs --once",
+    "keeper:history": "KEEPER_SECRET=$(cat .keeper-secret) node scripts/history.mjs"
+  },
+  "dependencies": {
+    "next": "^15.5.25",
+    "pg": "^8.23.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "viem": "^2.56.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.13",
+    "@types/node": "24.5.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "19.1.13",
+    "playwright": "^1.62.1",
+    "tailwindcss": "4.1.13",
+    "typescript": "5.9.2"
+  }
+}

@@ -2,100 +2,73 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usd, cents } from "@/lib/format";
-import { useTreasury, useWallet, WalletButton, type Treasury } from "./WalletButton";
+import { useVenue, useWallet, WalletButton } from "./WalletButton";
+import { claimOnChain } from "@/lib/wallet";
 import { explorerTx } from "@/lib/chain";
+import type { Market, Position, Trader } from "@/lib/types";
 
-/** What /api/redeem knows about a position: what it is owed, what it was paid. */
-interface RedeemRow {
-  id: string;
-  status: string;
-  won: boolean;
-  voided: boolean;
-  claimable: number;
-  claimedAt: string | null;
-  payoutTx: string | null;
-  depositTx: string | null;
-}
+type Row = Position & {
+  market: Market;
+  trader: Trader | null;
+  state: "open" | "won" | "lost" | "void";
+};
 
 export default function PortfolioClient() {
-  const treasury = useTreasury();
+  const venue = useVenue();
   const wallet = useWallet();
-  const live = treasury?.live === true;
+  const live = venue?.live === true;
 
-  /**
-   * What the treasury can pay right now. A claim is still worth making when
-   * it cannot - the position is recorded either way - but the button should
-   * not imply the money arrives on the click.
-   */
-  const funded =
-    treasury !== null && treasury.live === true
-      ? (treasury as Extract<Treasury, { live: true }> & { canPay?: boolean })
-      : null;
-  const canPayNow = (amount: number) =>
-    funded === null || (funded.canPay !== false && funded.collateral >= amount);
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [busy, setBusy] = useState<number | null>(null);
+  const [msg, setMsg] = useState<{ id: number; ok: boolean; text: string; tx?: string } | null>(null);
 
-  const [localOwner, setLocalOwner] = useState("");
-  const [data, setData] = useState<any>(null);
-  const [claims, setClaims] = useState<Record<string, RedeemRow>>({});
-  const [busy, setBusy] = useState<string | null>(null);
-  const [msg, setMsg] = useState<{ id: string; ok: boolean; text: string; tx?: string } | null>(null);
-
-  useEffect(() => {
-    try { setLocalOwner(localStorage.getItem("fomomarket.owner") ?? ""); } catch {}
-  }, []);
-
-  // positions are keyed by wallet address once the deployment takes real money
-  const owner = live ? wallet.address ?? "" : localOwner;
+  const owner = wallet.address ?? "";
 
   const load = useCallback(async () => {
-    if (!owner) { setData(null); setClaims({}); return; }
-    const [portfolio, redeemable] = await Promise.all([
-      fetch(`/api/portfolio?owner=${owner}`).then((x) => x.json()).catch(() => null),
-      fetch(`/api/redeem?owner=${owner}`).then((x) => x.json()).catch(() => null),
-    ]);
-    setData(portfolio);
-    const map: Record<string, RedeemRow> = {};
-    for (const r of (redeemable?.positions ?? []) as RedeemRow[]) map[r.id] = r;
-    setClaims(map);
+    if (!owner) { setRows(null); return; }
+    const r = await fetch(`/api/portfolio?owner=${owner}`).then((x) => x.json()).catch(() => null);
+    setRows((r?.positions ?? []) as Row[]);
   }, [owner]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   /**
-   * Collect a settled position.
+   * Collect a settled position or a refund.
    *
-   * On a live deployment this moves real USDG out of the treasury, so the
-   * server's own error text is shown untouched - it is written to be read.
+   * The holder signs this themselves and the contract pays them directly.
+   * Nothing here asks a server for permission, which is why there is no state
+   * in which a payout is "pending an operator".
    */
-  async function claim(id: string) {
-    if (!owner) return;
-    setBusy(id); setMsg(null);
+  async function collect(marketId: number) {
+    setBusy(marketId); setMsg(null);
     try {
-      const res = await fetch(live ? "/api/redeem" : "/api/portfolio", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify(live ? { owner, position: id } : { owner, id }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "could not collect that position");
-      if (live) {
-        setMsg(body.tx
-          ? { id, ok: true, text: `Paid ${usd(body.paid ?? 0)} to your wallet.`, tx: body.tx }
-          : { id, ok: true, text: body.reason ?? "Nothing to pay on that position." });
-      }
+      const tx = await claimOnChain(marketId);
+      setMsg({ id: marketId, ok: true, text: "Collected.", tx });
       await load();
       void wallet.refreshBalance();
     } catch (e) {
-      setMsg({ id, ok: false, text: e instanceof Error ? e.message : "could not collect" });
+      const raw = e instanceof Error ? e.message : "could not collect";
+      setMsg({
+        id: marketId, ok: false,
+        text: /user rejected|denied/i.test(raw) ? "You cancelled that in your wallet." : raw.split("\n")[0].slice(0, 160),
+      });
     } finally { setBusy(null); }
   }
 
-  if (treasury === null) return <Empty text="Loading…" />;
+  if (venue === null) return <Empty text="Loading…" />;
 
-  if (live && !wallet.address) {
+  if (!live) {
+    return (
+      <Empty text="No market contract is configured for this deployment, so there are no positions to read." />
+    );
+  }
+
+  if (!wallet.address) {
     return (
       <div style={{ marginTop: "var(--s-8)", display: "grid", gap: "var(--s-3)", justifyItems: "start" }}>
         <p style={{ color: "var(--fg-faint)", margin: 0 }}>
-          Positions are held by the wallet that paid for them. Connect that wallet to see them.
+          Positions live in the contract, keyed to the wallet that staked them.
+          Connect that wallet to read yours.
         </p>
         <WalletButton wallet={wallet} />
         {wallet.error && (
@@ -105,19 +78,18 @@ export default function PortfolioClient() {
     );
   }
 
-  if (!owner) return <Empty text="No local identity yet — place a position first." />;
-  if (!data) return <Empty text="Loading…" />;
-  if (!data.positions?.length) return <Empty text="Nothing here yet." />;
+  if (rows === null) return <Empty text="Loading…" />;
+  if (!rows.length) return <Empty text="Nothing here yet." />;
 
-  const owed = Object.values(claims).reduce((s, r) => s + (r.claimable ?? 0), 0);
+  const owed = rows
+    .filter((r) => !r.claimed && (r.state === "won" || r.state === "void"))
+    .reduce((s, r) => s + (r.payout ?? 0), 0);
 
   return (
     <>
-      {live && (
-        <div style={{ marginTop: "var(--s-6)", display: "flex", justifyContent: "flex-end" }}>
-          <WalletButton wallet={wallet} />
-        </div>
-      )}
+      <div style={{ marginTop: "var(--s-6)", display: "flex", justifyContent: "flex-end" }}>
+        <WalletButton wallet={wallet} />
+      </div>
 
       {owed > 0 && (
         <div style={{
@@ -133,90 +105,73 @@ export default function PortfolioClient() {
       )}
 
       <div style={{ display: "grid", gap: "var(--s-3)", marginTop: "var(--s-6)" }}>
-        {data.positions.map((p: any) => {
-          const r = claims[p.id];
-          const claimable = r?.claimable ?? 0;
-          const note = msg?.id === p.id ? msg : null;
-          const slow = claimable > 0 && !canPayNow(claimable);
+        {rows.map((p) => {
+          const key = `${p.marketId}-${p.side}`;
+          const claimable = !p.claimed && (p.state === "won" || p.state === "void") ? (p.payout ?? 0) : 0;
+          const note = msg?.id === p.marketId ? msg : null;
           return (
-            <div key={p.id} style={{
+            <div key={key} style={{
               padding: "var(--s-4)", borderRadius: "var(--r-lg)",
               background: "var(--surface-raised)", border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-1)",
             }}>
               <div style={{
                 display: "grid", gap: "var(--s-4)", alignItems: "center",
                 gridTemplateColumns: "minmax(0,2fr) repeat(3, minmax(0,1fr)) auto",
-              }}>
+              }} className="pf-row">
                 <div style={{ minWidth: 0 }}>
                   <Link href={`/m/${p.marketId}`} style={{ fontWeight: 600 }}>
                     @{p.market.handle} · {p.market.window}
                   </Link>
                   <div style={{ fontSize: ".8125rem", color: "var(--fg-faint)" }}>
-                    {p.side === "call" ? "↑ Call" : "↓ Put"} · {p.shares.toFixed(2)} shares
+                    {p.side === "call" ? "↑ Up" : "↓ Down"} · market #{p.marketId}
                   </div>
                 </div>
-                <Cell k="Cost" v={usd(p.cost)} />
-                {p.state === "open"
-                  ? <Cell k="Mark" v={cents(p.markPrice)} />
-                  : <Cell k="Fee" v={usd(p.fee ?? 0)} />}
-                <Cell k={p.state === "open" ? "Value" : "Payout"}
-                  v={usd(p.state === "open" ? p.markValue : (p.net ?? 0))}
+                <Cell k="Staked" v={usd(p.stake)} />
+                <Cell
+                  k={p.state === "open" ? "Pot share" : "Outcome"}
+                  v={p.state === "open"
+                    ? cents(p.market.volume > 0
+                        ? (p.side === "call" ? p.market.pools.call : p.market.pools.put) / p.market.volume
+                        : 0.5)
+                    : p.state} />
+                <Cell
+                  k={p.state === "open" ? "If it lands" : "Payout"}
+                  v={usd(p.markedAt)}
                   tone={p.state === "lost" ? "down" : p.state === "open" ? undefined : "up"} />
                 <div style={{ textAlign: "right" }}>
                   <Badge state={p.state} />
                   {claimable > 0 && (
-                    <button onClick={() => claim(p.id)} disabled={busy === p.id} style={{
+                    <button onClick={() => collect(p.marketId)} disabled={busy === p.marketId} style={{
                       display: "block", marginTop: 6, marginLeft: "auto",
                       padding: "8px 14px", borderRadius: "var(--r-md)",
                       border: "none", background: "var(--accent)", color: "var(--accent-contrast)",
-                      fontWeight: 600, fontSize: ".8125rem",
-                      cursor: busy === p.id ? "progress" : "pointer", fontFamily: "inherit",
+                      fontWeight: 500, fontSize: ".8125rem",
+                      cursor: busy === p.marketId ? "progress" : "pointer", fontFamily: "inherit",
                     }}>
-                      {busy === p.id ? "Paying…" : `Claim ${usd(claimable)}`}
+                      {busy === p.marketId ? "Confirm in wallet…" : `Collect ${usd(claimable)}`}
                     </button>
+                  )}
+                  {p.claimed && p.state !== "open" && (
+                    <div style={{ marginTop: 6, fontSize: ".75rem", color: "var(--fg-faint)" }}>collected</div>
                   )}
                 </div>
               </div>
 
-              {/* payment trail: what was paid in, and what came back out */}
-              {(r?.payoutTx || r?.claimedAt || r?.depositTx || note || slow) && (
+              {note && (
                 <div style={{
                   marginTop: "var(--s-3)", paddingTop: "var(--s-3)",
                   borderTop: "1px solid var(--border-subtle)",
-                  display: "flex", flexWrap: "wrap", gap: "var(--s-3)",
-                  fontSize: ".75rem", color: "var(--fg-faint)", alignItems: "center",
+                  fontSize: ".75rem", color: note.ok ? "var(--up)" : "var(--down)", lineHeight: 1.5,
                 }}>
-                  {r?.depositTx && <TxLink hash={r.depositTx} label="Stake paid" />}
-                  {r?.payoutTx
-                    ? <TxLink hash={r.payoutTx} label="Payout sent" />
-                    : r?.claimedAt && claimable === 0 && <span>Closed out</span>}
-                  {/* claiming is still worth doing - it just may not land today */}
-                  {slow && !note && (
-                    <span style={{ color: "var(--fg-muted)", lineHeight: 1.5 }}>
-                      This payout is settled by the operator, and may take a while if the treasury is short.
-                    </span>
-                  )}
-                  {note && (
-                    <span style={{ color: note.ok ? "var(--up)" : "var(--down)", lineHeight: 1.5 }}>
-                      {note.text}
-                      {note.tx && (
-                        <>
-                          {" "}
-                          <a href={explorerTx(note.tx)} target="_blank" rel="noreferrer"
-                            style={{ color: "var(--accent)", fontWeight: 600 }}>
-                            View transaction
-                          </a>
-                        </>
-                      )}
-                    </span>
-                  )}
-                  {/* a refused claim is not a lost one, and the server's
-                      reason above says nothing about that either way */}
-                  {note && !note.ok && (
-                    <span style={{ flexBasis: "100%", color: "var(--fg-muted)", lineHeight: 1.5 }}>
-                      Your position is still recorded and will be paid — nothing has been lost.
-                    </span>
+                  {note.text}
+                  {note.tx && (
+                    <>
+                      {" "}
+                      <a href={explorerTx(note.tx)} target="_blank" rel="noreferrer"
+                        style={{ color: "var(--accent)", fontWeight: 600 }}>
+                        View transaction
+                      </a>
+                    </>
                   )}
                 </div>
               )}
@@ -224,22 +179,14 @@ export default function PortfolioClient() {
           );
         })}
       </div>
+      <style>{`@media (max-width: 760px){ .pf-row{grid-template-columns:1fr 1fr !important} }`}</style>
     </>
   );
 }
 
 const Empty = ({ text }: { text: string }) => (
-  <p style={{ marginTop: "var(--s-8)", color: "var(--fg-faint)" }}>{text}</p>
+  <p style={{ marginTop: "var(--s-8)", color: "var(--fg-faint)", maxWidth: "56ch", lineHeight: 1.6 }}>{text}</p>
 );
-
-function TxLink({ hash, label }: { hash: string; label: string }) {
-  return (
-    <a href={explorerTx(hash)} target="_blank" rel="noreferrer"
-      style={{ color: "var(--fg-muted)", textDecoration: "underline", textUnderlineOffset: 3 }}>
-      {label} ↗
-    </a>
-  );
-}
 
 function Cell({ k, v, tone }: { k: string; v: string; tone?: "up" | "down" }) {
   return (
@@ -255,7 +202,7 @@ function Badge({ state }: { state: string }) {
     open: ["var(--fg-muted)", "var(--surface-sunken)"],
     won: ["var(--up)", "var(--up-quiet)"],
     lost: ["var(--down)", "var(--down-quiet)"],
-    void: ["var(--accent)", "var(--accent-quiet)"],
+    void: ["var(--accent-hover)", "var(--accent-quiet)"],
   };
   const [fg, bg] = map[state] ?? map.open;
   return (

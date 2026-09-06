@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStore } from "@/lib/store";
-import { ready, isOptedOut } from "@/lib/runtime";
-import { ensureMarkets, settleDue, ROSTER_SIZE } from "@/lib/markets";
+import { ready } from "@/lib/runtime";
 import { parseExactUsd } from "@/lib/settlement";
 import type { Snapshot, Trader } from "@/lib/types";
 
@@ -69,14 +68,11 @@ export async function POST(req: Request) {
   await store.putTraders(traders);
 
   const snaps = await store.listSnapshots();
-  await ensureMarkets(store, traders.slice(0, ROSTER_SIZE), snaps);
-  const settled = await settleDue(
-    store, snaps,
-    new Set(traders.filter((t) => isOptedOut(t.handle)).map((t) => t.handle)),
-  );
 
+  // markets are opened and settled by the oracle against the contract, not
+  // here: a reading is evidence, and evidence does not move money by itself
   return NextResponse.json({
     accepted: Object.keys(pnl).length, rejected,
-    at: snapshot.t, snapshots: snaps.length, settled: settled.length,
+    at: snapshot.t, snapshots: snaps.length,
   });
 }

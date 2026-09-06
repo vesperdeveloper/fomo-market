@@ -52,6 +52,24 @@ export default function Nav() {
           </span>
         </Link>
 
+        {/* the account this is run from — empty until there is one to point at */}
+        <a
+          href="https://x.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="fomo market on X"
+          style={{
+            display: "grid", placeItems: "center", width: 32, height: 32,
+            borderRadius: "var(--r-md)", color: "var(--fg-muted)", flexShrink: 0,
+            marginLeft: -2,
+            transition: "background var(--dur-micro) var(--ease-ui), color var(--dur-micro) var(--ease-ui)",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,.08)"; e.currentTarget.style.color = "var(--fg)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-muted)"; }}
+        >
+          <XIcon />
+        </a>
+
         {/* the app's own tab row — active tab is white with a periwinkle
             underline, exactly where fomo puts Tokens / Feed / Leaderboard */}
         <nav className="nav-links" style={{ display: "flex", gap: "var(--s-5)", alignItems: "center", height: "100%" }}>
@@ -85,6 +103,20 @@ export default function Nav() {
         </nav>
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "var(--s-2)" }}>
+          {/* the contract address, once there is one to publish */}
+          <span
+            className="nav-ca num"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: "var(--r-md)",
+              background: "var(--surface-raised)", border: "1px dashed var(--border-strong)",
+              fontSize: ".8125rem", color: "var(--fg-muted)", whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ color: "var(--fg-faint)" }}>CA:</span>
+            <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
+          </span>
+
           {/* fomo's cash-balance pill: label over value, hairline box */}
           {wallet.address ? (
             <span
@@ -132,8 +164,17 @@ export default function Nav() {
       </div>
       <style>{`
         @media (max-width: 1040px){ .nav-links{display:none !important} }
+        @media (max-width: 760px){ .nav-ca{display:none !important} }
         @media (max-width: 560px){ .nav-connect{display:none !important} }
       `}</style>
     </header>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.66l7.73-8.84L1.25 2.25h6.83l4.71 6.23zm-1.16 17.52h1.83L7.08 4.13H5.11z" />
+    </svg>
   );
 }

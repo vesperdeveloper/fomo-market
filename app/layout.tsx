@@ -10,11 +10,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://fomomarket.vercel.app"),
   title: "fomo market · bet on the traders, not the tokens",
   description:
-    "Binary options written on a fomo trader's account PnL. Pick a handle, pick a window, take up or down. Settled in USDG from a public snapshot record.",
+    "Up or down on a fomo trader's account PnL. Pick a handle, pick a window, stake USDG into the market's own contract. Settled on chain from a public snapshot record.",
   openGraph: {
     title: "fomo market · bet on the traders, not the tokens",
     description:
-      "Up or down on whether a fomo trader's account PnL is green over the next day or week. Settled in USDG on Robinhood Chain.",
+      "Up or down on whether a fomo trader's account PnL is green over the next day or week. One contract on Robinhood Chain holds every stake and pays every winner.",
     images: [{ url: "/brand/og.jpg", width: 1200, height: 400 }],
   },
   twitter: {

@@ -28,9 +28,34 @@ export default function Footer() {
             <span style={{ fontSize: "1.25rem", color: "var(--fg-faint)", letterSpacing: "-.05em" }}>market</span>
           </div>
           <p style={{ margin: "var(--s-3) 0 0", fontSize: ".875rem", color: "var(--fg-muted)", maxWidth: 320, lineHeight: 1.6 }}>
-            where traders become the underlying. Binary options on a fomo
-            account&apos;s PnL, settled from a snapshot record anyone can read back.
+            where traders become the underlying. Up or down on a fomo account&apos;s
+            PnL, staked and settled in one contract anyone can read back.
           </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--s-3)", marginTop: "var(--s-4)" }}>
+            <a
+              href="https://x.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="fomo market on X"
+              style={{
+                display: "grid", placeItems: "center", width: 34, height: 34,
+                borderRadius: "var(--r-md)", border: "1px solid var(--border-subtle)",
+                background: "var(--surface-raised)", color: "var(--fg-muted)",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.66l7.73-8.84L1.25 2.25h6.83l4.71 6.23zm-1.16 17.52h1.83L7.08 4.13H5.11z" />
+              </svg>
+            </a>
+            <span className="num" style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "7px 12px", borderRadius: "var(--r-md)",
+              border: "1px dashed var(--border-strong)", fontSize: ".8125rem", color: "var(--fg-muted)",
+            }}>
+              <span style={{ color: "var(--fg-faint)" }}>CA:</span>
+              <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
+            </span>
+          </div>
         </div>
         {COLS.map(([title, links]) => (
           <div key={title}>

@@ -140,7 +140,9 @@ export default function DiscoverBoard({ rows, priceMap, multipleMap }: Props) {
       </div>
 
       <p style={{ fontSize: ".875rem", color: "var(--fg-muted)", marginTop: "var(--s-4)", lineHeight: 1.6 }}>
-        {marketCount} markets across {traderCount} listed traders, one on the next 24 hours and one on the next 7 days.
+        {marketCount
+          ? `${marketCount} markets across ${traderCount} listed traders, one on the next 24 hours and one on the next 7 days.`
+          : `${traderCount} accounts listed. Each carries a 24-hour and a 7-day market the moment the book opens.`}
       </p>
 
       {view === "list" ? (

@@ -1,11 +1,13 @@
-import type { Market, Position, Snapshot, Trader } from "./types";
+import type { Snapshot, Trader } from "./types";
 import { postgresStore } from "./store-postgres";
 
 /**
- * Storage interface. Snapshots are append-only and served read-only;
- * markets and positions are mutable. The file implementation is for local
- * work, the memory one for preview builds, and a KV implementation slots
- * in behind the same interface for production.
+ * Storage.
+ *
+ * Deliberately small: money lives on the chain, so nothing here holds a
+ * balance, a position or a pot. What is left is the evidence a market settles
+ * from — the snapshot record — the roster it is written on, and the reader's
+ * own session, which rotates and has to be kept somewhere.
  */
 export interface Store {
   appendSnapshot(s: Snapshot): Promise<void>;
@@ -15,27 +17,15 @@ export interface Store {
   getTraders(): Promise<Trader[]>;
   putTraders(t: Trader[]): Promise<void>;
 
-  getMarkets(): Promise<Market[]>;
-  putMarket(m: Market): Promise<void>;
-
-  getPositions(owner?: string): Promise<Position[]>;
-  putPosition(p: Position): Promise<void>;
-
-  /**
-   * Take ownership of a deposit transaction, returning false if it has
-   * already been spent. One payment buys one position: without this a
-   * single transfer could be replayed into as many tickets as the caller
-   * cared to ask for.
-   */
-  claimDepositTx(hash: string): Promise<boolean>;
+  /** The reader's rotating refresh token. Never leaves the server. */
+  getSession(): Promise<string | null>;
+  putSession(refreshToken: string): Promise<void>;
 }
 
 const MEM = {
   snapshots: [] as Snapshot[],
   traders: [] as Trader[],
-  markets: [] as Market[],
-  positions: [] as Position[],
-  spentTx: new Set<string>(),
+  session: null as string | null,
 };
 
 export const memoryStore: Store = {
@@ -56,40 +46,18 @@ export const memoryStore: Store = {
   },
   async getTraders() { return [...MEM.traders]; },
   async putTraders(t) { MEM.traders = t; },
-  async getMarkets() { return [...MEM.markets]; },
-  async putMarket(m) {
-    const i = MEM.markets.findIndex((x) => x.id === m.id);
-    if (i >= 0) MEM.markets[i] = m; else MEM.markets.push(m);
-  },
-  async getPositions(owner) {
-    return owner ? MEM.positions.filter((p) => p.owner === owner) : [...MEM.positions];
-  },
-  async putPosition(p) {
-    const i = MEM.positions.findIndex((x) => x.id === p.id);
-    if (i >= 0) MEM.positions[i] = p; else MEM.positions.push(p);
-  },
-  async claimDepositTx(hash) {
-    const key = hash.toLowerCase();
-    if (MEM.spentTx.has(key)) return false;
-    MEM.spentTx.add(key);
-    return true;
-  },
+  async getSession() { return MEM.session; },
+  async putSession(t) { MEM.session = t; },
 };
 
 export const isDurable = () =>
   Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
 
 /**
- * Postgres when a connection string is configured, memory otherwise.
- *
- * The memory store is only viable for a single long-lived process: on
- * serverless it is per-invocation, so positions and the snapshot history
- * both evaporate between requests. Anything real needs the database.
+ * Postgres where one is configured, memory otherwise. A preview build with
+ * no database still runs; it simply forgets, which is the correct behaviour
+ * for a build nobody is trading against.
  */
 export function getStore(): Store {
-  // the pg pool is created lazily on first query, so importing this
-  // unconditionally costs nothing when no database is configured
   return isDurable() ? postgresStore : memoryStore;
 }
-
-

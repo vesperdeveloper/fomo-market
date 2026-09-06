@@ -1,5 +1,6 @@
 import { board, multipleOf, priceOf } from "@/lib/view";
 import DiscoverBoard from "@/components/DiscoverBoard";
+import VenueBanner from "@/components/VenueBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +23,16 @@ export default async function Discover() {
       <div className="eyebrow">Markets</div>
       <h1 style={{ fontSize: "var(--step-4)", marginTop: "var(--s-3)", letterSpacing: "-.045em" }}>Every trader, every market</h1>
       <p style={{ color: "var(--fg-muted)", maxWidth: "56ch", marginTop: "var(--s-3)", lineHeight: 1.6 }}>
-        Puts and calls on whether a fomo trader&apos;s total account PnL is up or down,
-        over the next 24 hours and over the next 7 days.
+        Up or down on whether a fomo trader&apos;s total account PnL ends the window
+        ahead of where it started — over the next 24 hours, and over the next 7 days.
       </p>
       {readAt && (
         <p className="num" style={{ fontSize: ".8125rem", color: "var(--fg-faint)", marginTop: "var(--s-3)" }}>
           Last read {new Date(readAt).toISOString().replace("T", " ").slice(0, 16)}Z · {source}
         </p>
       )}
+
+      <VenueBanner />
 
       <DiscoverBoard
         rows={rows.map((r) => ({

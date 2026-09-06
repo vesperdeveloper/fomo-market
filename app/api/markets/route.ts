@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
 import { ready } from "@/lib/runtime";
-import { spotPrice, quoteBuy, QUOTE_STAKE } from "@/lib/amm";
-import { netMultiple } from "@/lib/prior";
+import { readMarkets } from "@/lib/onchain";
+import { impliedPrice, multiple } from "@/lib/pool";
+import { QUOTE_STAKE } from "@/lib/view";
 import { valueAt } from "@/lib/settlement";
+import { marketAddress, chain } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
 
+/** The book, straight off the contract, with the record's view of the
+ *  underlying next to it. Public because a settlement anybody can check
+ *  needs inputs anybody can fetch. */
 export async function GET(req: Request) {
   const { store, snaps } = await ready();
   const url = new URL(req.url);
   const handle = url.searchParams.get("handle");
 
-  const markets = await store.getMarkets();
-  const traders = await store.getTraders();
+  const [markets, traders] = await Promise.all([readMarkets(), store.getTraders()]);
   const now = new Date().toISOString();
 
   const rows = markets
@@ -24,18 +28,20 @@ export async function GET(req: Request) {
         ...m,
         trader: t ?? null,
         live,
-        // price and implied probability are the same number here
-        price: { call: spotPrice(m.reserves, "call"), put: spotPrice(m.reserves, "put") },
-        // same reference ticket and same fee treatment the cards use, so a
-        // market cannot quote one multiple here and another on its page
+        price: { call: impliedPrice(m.pools, "call"), put: impliedPrice(m.pools, "put") },
         multiple: {
-          call: netMultiple(quoteBuy(m.reserves, "call", QUOTE_STAKE).shares, QUOTE_STAKE),
-          put: netMultiple(quoteBuy(m.reserves, "put", QUOTE_STAKE).shares, QUOTE_STAKE),
+          call: multiple(m.pools, "call", QUOTE_STAKE),
+          put: multiple(m.pools, "put", QUOTE_STAKE),
         },
         quoteStake: QUOTE_STAKE,
       };
     })
     .sort((a, b) => a.id - b.id);
 
-  return NextResponse.json({ count: rows.length, markets: rows });
+  return NextResponse.json({
+    chainId: chain.id,
+    contract: marketAddress(),
+    count: rows.length,
+    markets: rows,
+  });
 }

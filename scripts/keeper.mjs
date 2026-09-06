@@ -24,7 +24,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 const PROFILE  = process.env.KEEPER_PROFILE ?? join(homedir(), ".fomomarket-keeper-profile");
-const TARGET   = process.env.KEEPER_TARGET  ?? "https://fomomarket.vercel.app";
+const TARGET   = process.env.KEEPER_TARGET  ?? "https://fomo-market.vercel.app";
 const SECRET   = process.env.KEEPER_SECRET  ?? "";
 const HANDLE   = process.env.FOMO_HANDLE    ?? "TameZestyLlama";
 const PAGE_URL = `https://fomo.family/profile/${HANDLE}`;

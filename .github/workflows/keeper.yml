@@ -1,16 +1,23 @@
-# The reader, on a schedule, on somebody else's machine.
+# The reader, on somebody else's machine.
 #
-# Every five minutes it takes one reading of the fomo leaderboard, posts it to
-# the site, and asks the oracle to open or settle whatever is due. GitHub's
-# cron is best-effort and drifts under load — settlement takes a median of the
-# three readings nearest a moment, so a skipped tick costs nothing.
+# GitHub's `schedule` trigger is best-effort and in practice fires every two
+# to five hours, which is useless here: settlement takes the median of the
+# three readings nearest a moment and refuses anything older than twenty
+# minutes, so a gap that size voids every market it touches.
+#
+# So a run is not one reading — it is a relay. Each job ticks every five
+# minutes for just under six hours (the job limit), and the hourly schedule
+# only exists to start the next relay when one ends or dies. Continuous
+# coverage from a trigger that cannot be relied on to be punctual.
 name: keeper
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "7 * * * *"
   workflow_dispatch:
 
+# a second relay would double every reading, so the queue holds it until the
+# running one is done — which is exactly the handover this depends on
 concurrency:
   group: keeper
   cancel-in-progress: false
@@ -18,7 +25,7 @@ concurrency:
 jobs:
   read:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,10 +33,20 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r keeper/requirements.txt
-      - run: python keeper/read.py
+
+      - name: tick every five minutes
         env:
           SITE: ${{ vars.SITE }}
           KEEPER_SECRET: ${{ secrets.KEEPER_SECRET }}
           PRIVY_REFRESH_TOKEN: ${{ secrets.PRIVY_REFRESH_TOKEN }}
           PRIVY_APP_ID: ${{ vars.PRIVY_APP_ID }}
           PRIVY_CA_ID: ${{ vars.PRIVY_CA_ID }}
+        run: |
+          set -u
+          # 5h45m, leaving the job's six-hour ceiling some room
+          end=$(( $(date +%s) + 20700 ))
+          while [ "$(date +%s)" -lt "$end" ]; do
+            # one bad reading is a gap in the record, not a reason to stop
+            python keeper/read.py || echo "tick failed, carrying on"
+            sleep 300
+          done

@@ -12,9 +12,9 @@ layout the desktop app uses.
 
 ## What is running where
 
-- site — https://fomo-market.vercel.app (`fomo-market` on Vercel)
-- sibling front end — https://fomo-market-terminal.vercel.app, same contract
-  and same database, a different design language
+- site — https://fomomarket.trade (`fomo-market` on Vercel)
+- sibling front end — https://terminal.fomomarket.trade, same book and same
+  database, a different design language
 - reader — GitHub Actions, `.github/workflows/keeper.yml`, every 5 minutes.
   It runs `keeper/read.py` on GitHub's machines, not on anybody's laptop.
 - book — `contracts/FomoMarket.sol`, one parimutuel contract holding every

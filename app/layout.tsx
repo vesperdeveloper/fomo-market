@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   // pinned, because Next resolves relative metadata URLs against
   // VERCEL_URL and would otherwise point link previews at whichever
   // alias built the deployment
-  metadataBase: new URL("https://fomo-market.vercel.app"),
+  metadataBase: new URL("https://fomomarket.trade"),
   title: "fomo market · bet on the traders, not the tokens",
   description:
     "Up or down on a fomo trader's account PnL. Pick a handle, pick a window, stake USDG into the market's own contract. Settled on chain from a public snapshot record.",
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@usefomo_market",
+    creator: "@usefomo_market",
     title: "fomo market · bet on the traders, not the tokens",
     images: ["/brand/og.jpg"],
   },

@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 const [,, path, out, full] = process.argv;
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
-await p.goto("http://localhost:3081" + path, { waitUntil: "networkidle", timeout: 120000 });
+await p.goto("http://localhost:3081" + path, { waitUntil: "load", timeout: 120000 });
 await p.evaluate(async () => {
   for (let y = 0; y < document.body.scrollHeight; y += 400) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 40)); }
   window.scrollTo(0, 0);

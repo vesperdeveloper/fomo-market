@@ -23,9 +23,11 @@ export default function Footer() {
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: "var(--fg)", display: "flex" }}><Mark size={22} /></span>
-            <span className="wordmark" style={{ fontSize: "1.25rem" }}>fomo</span>
-            <span style={{ fontSize: "1.25rem", color: "var(--fg-faint)", letterSpacing: "-.05em" }}>market</span>
+            <Mark size={22} />
+            <span className="wordmark" style={{ fontSize: "1.25rem", display: "flex", gap: ".22em" }}>
+              <span>fomo</span>
+              <span style={{ color: "var(--accent)" }}>market</span>
+            </span>
           </div>
           <p style={{ margin: "var(--s-3) 0 0", fontSize: ".875rem", color: "var(--fg-muted)", maxWidth: 320, lineHeight: 1.6 }}>
             where traders become the underlying. Up or down on a fomo account&apos;s

@@ -38,17 +38,11 @@ export default function Nav() {
     >
       <div className="wrap-wide" style={{ height: "100%", display: "flex", alignItems: "center", gap: "var(--s-6)" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
-          <span style={{ color: "var(--fg)", display: "flex" }}><Mark size={26} /></span>
-          <span className="wordmark" style={{ fontSize: "1.375rem" }}>fomo</span>
-          <span
-            style={{
-              padding: "2px 7px", borderRadius: 6, fontSize: ".625rem", fontWeight: 600,
-              letterSpacing: ".1em", textTransform: "uppercase",
-              background: "var(--accent-quiet)", color: "var(--accent-hover)",
-              border: "1px solid rgba(96,106,247,.25)", marginTop: 1,
-            }}
-          >
-            market
+          <Mark size={24} />
+          {/* same lockup as the hero, only smaller: the accent carries "market" */}
+          <span className="wordmark" style={{ fontSize: "1.375rem", display: "flex", gap: ".22em" }}>
+            <span>fomo</span>
+            <span style={{ color: "var(--accent)" }}>market</span>
           </span>
         </Link>
 

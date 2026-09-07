@@ -168,9 +168,6 @@ export default async function Home() {
                 fontSize: ".9375rem", color: "var(--fg-muted)",
               }}
             >
-              <span style={{ letterSpacing: ".08em", textTransform: "uppercase", fontSize: ".6875rem", color: "var(--fg-faint)" }}>
-                Contract
-              </span>
               <span style={{ color: "var(--fg-faint)" }}>CA:</span>
               <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
             </div>

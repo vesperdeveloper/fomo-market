@@ -8,7 +8,10 @@ import Banner from "@/components/Banner";
 import { usd, usdShort, pct, cents, signed, followers as fmtF } from "@/lib/format";
 import { fullSize } from "@/lib/img";
 
-export const dynamic = "force-dynamic";
+/* Rendered once and reused for 60s — one account's record, refreshed on the reader's cadence.
+   Every click used to be a full server render against the database, which
+   is what made the site feel slow to answer. */
+export const revalidate = 60;
 
 export default async function TraderPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;

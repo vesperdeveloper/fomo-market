@@ -6,11 +6,14 @@ import TraderCard, { Avatar } from "@/components/TraderCard";
 import Marquee from "@/components/Marquee";
 import Reveal from "@/components/Reveal";
 
-import { usd, usdShort, pct, cents, followers as fmtF } from "@/lib/format";
+import { usd, usdShort, pct, cents, moveLabel, followers as fmtF } from "@/lib/format";
 import { SEED_PER_MARKET } from "@/lib/markets";
 import { FEE_BPS, FEE_SPLIT } from "@/lib/settlement";
 
-export const dynamic = "force-dynamic";
+/* Rendered once and reused for 60s — the board moves when the keeper reads, which is every five minutes.
+   Every click used to be a full server render against the database, which
+   is what made the site feel slow to answer. */
+export const revalidate = 60;
 
 /**
  * Running total held against handles that have not been claimed. There is no
@@ -414,8 +417,14 @@ export default async function Home() {
                           </Link>
                         </td>
                         <td className="num" style={{ padding: "14px 16px", textAlign: "right", fontWeight: 600 }}>{usdShort(r.pnl)}</td>
-                        <td className="num" style={{ padding: "14px 16px", textAlign: "right", color: r.change24h >= 0 ? "var(--up)" : "var(--down)" }}>{pct(r.change24h)}</td>
-                        <td className="num" style={{ padding: "14px 16px", textAlign: "right", color: r.change7d >= 0 ? "var(--up)" : "var(--down)" }}>{pct(r.change7d)}</td>
+                        <td className="num" style={{
+                          padding: "14px 16px", textAlign: "right",
+                          color: !r.hasRecord ? "var(--fg-faint)" : r.change24h >= 0 ? "var(--up)" : "var(--down)",
+                        }}>{moveLabel({ pnl: r.pnl, delta: r.delta24h, change: r.change24h, hasRecord: r.hasRecord }) ?? "—"}</td>
+                        <td className="num" style={{
+                          padding: "14px 16px", textAlign: "right",
+                          color: !r.hasRecord ? "var(--fg-faint)" : r.change7d >= 0 ? "var(--up)" : "var(--down)",
+                        }}>{moveLabel({ pnl: r.pnl, delta: r.delta7d, change: r.change7d, hasRecord: r.hasRecord }) ?? "—"}</td>
                         <td style={{ padding: "10px 16px" }}>
                           {m && (
                             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>

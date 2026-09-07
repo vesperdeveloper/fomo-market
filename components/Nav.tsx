@@ -111,8 +111,10 @@ export default function Nav() {
             <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
           </span>
 
-          {/* fomo's cash-balance pill: label over value, hairline box */}
-          {wallet.address ? (
+          {/* The balance only appears once there is a wallet in play. There
+              is no Connect button up here on purpose: reading the board needs
+              no wallet, and the ticket asks for one at the moment of the stake. */}
+          {wallet.address && (
             <span
               title={wallet.address}
               style={{
@@ -126,19 +128,6 @@ export default function Nav() {
               </span>
               <span style={{ fontSize: ".625rem", color: "var(--fg-faint)" }}>{short(wallet.address)}</span>
             </span>
-          ) : (
-            <button
-              onClick={() => { void wallet.connectWallet(); }}
-              disabled={wallet.connecting}
-              className="nav-connect"
-              style={{
-                padding: "8px 14px", borderRadius: "var(--r-md)", cursor: "pointer",
-                background: "var(--surface-raised)", border: "1px solid var(--border-subtle)",
-                color: "var(--fg)", fontSize: ".875rem", fontWeight: 500,
-              }}
-            >
-              {wallet.connecting ? "Connecting…" : "Connect"}
-            </button>
           )}
 
           <Link
@@ -159,7 +148,6 @@ export default function Nav() {
       <style>{`
         @media (max-width: 1040px){ .nav-links{display:none !important} }
         @media (max-width: 760px){ .nav-ca{display:none !important} }
-        @media (max-width: 560px){ .nav-connect{display:none !important} }
       `}</style>
     </header>
   );

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Mark from "./Mark";
 import { useWallet } from "./WalletButton";
-import { short } from "@/lib/wallet";
+import WalletMenu from "./WalletMenu";
 
 const LINKS = [
   ["/discover", "Markets"],
@@ -111,24 +111,10 @@ export default function Nav() {
             <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
           </span>
 
-          {/* The balance only appears once there is a wallet in play. There
-              is no Connect button up here on purpose: reading the board needs
-              no wallet, and the ticket asks for one at the moment of the stake. */}
-          {wallet.address && (
-            <span
-              title={wallet.address}
-              style={{
-                display: "flex", flexDirection: "column", lineHeight: 1.2,
-                padding: "5px 12px", borderRadius: "var(--r-md)",
-                background: "var(--surface-raised)", border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <span className="num" style={{ fontSize: ".875rem", fontWeight: 600 }}>
-                {wallet.balance == null ? "—" : `$${wallet.balance.toFixed(2)}`}
-              </span>
-              <span style={{ fontSize: ".625rem", color: "var(--fg-faint)" }}>{short(wallet.address)}</span>
-            </span>
-          )}
+          {/* The balance only appears once there is a wallet in play, and it
+              is a menu rather than a label: switching accounts and dropping
+              one are the only two things anybody wants from it. */}
+          <WalletMenu wallet={wallet} />
 
           <Link
             href="/discover"

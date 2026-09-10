@@ -18,9 +18,12 @@ on:
 
 # a second relay would double every reading, so the queue holds it until the
 # running one is done — which is exactly the handover this depends on
+# A stuck tick must never hold up the next reading. Readings are what
+# settle markets, they are taken every five minutes, and a stale one is
+# worth nothing — so the newest run wins and the old one is dropped.
 concurrency:
   group: keeper
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   read:

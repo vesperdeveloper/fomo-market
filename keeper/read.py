@@ -132,7 +132,7 @@ def snapshot_at(token, user_id, when):
     """
     url = ("https://prod-api.fomo.family/v2/userTokens/aggregatedSnapshotById"
            f"?userId={user_id}&snapshotId={when}")
-    r = requests.get(url, headers=api_headers(token), impersonate=IMPERSONATE, timeout=45)
+    r = requests.get(url, headers=api_headers(token), impersonate=IMPERSONATE, timeout=15)
     if r.status_code != 200:
         return None
     body = (r.json() or {}).get("responseObject") or {}
@@ -153,12 +153,18 @@ def history_for(token, user_id, days=30):
     """
     now = int(time.time())
     hour = now // HOUR * HOUR
-    wanted = [hour - k * HOUR for k in range(1, 49)]
+    # a day of hourly detail is what the 24h chart reads; everything older is
+    # drawn at eight-hour steps, which is as coarse as a month can be without
+    # the line turning into a staircase
+    wanted = [hour - k * HOUR for k in range(1, 25)]
     eight = hour // EIGHT_HOURS * EIGHT_HOURS
-    wanted += [eight - k * EIGHT_HOURS for k in range(6, days * 3)]
+    wanted += [eight - k * EIGHT_HOURS for k in range(3, days * 3)]
 
+    started = time.monotonic()
     points = []
     for when in sorted(set(wanted)):
+        if time.monotonic() - started > BACKFILL_BUDGET_S / 2:
+            break
         pnl = snapshot_at(token, user_id, when)
         if pnl is not None:
             points.append({"t": datetime.fromtimestamp(when, timezone.utc)
@@ -167,10 +173,21 @@ def history_for(token, user_id, days=30):
     return points
 
 
+# The reading is what settles markets; the backfill is a convenience. When
+# fomo is slow or throttling, 130 sequential requests per handle can outlast
+# the whole tick — and because the runs are serialised, one stuck backfill
+# stops every reading behind it. So it gets a budget, and gives up politely.
+BACKFILL_BUDGET_S = 90
+
+
 def backfill(token, handles, ids):
     """Fetch and push the past for handles the site says it is missing."""
+    started = time.monotonic()
     series = []
     for h in handles:
+        if time.monotonic() - started > BACKFILL_BUDGET_S:
+            print(f"  budget spent, leaving {h} for the next tick")
+            break
         uid = ids.get(h)
         if not uid:
             print(f"  {h}: no user id in the leaderboard, skipping")

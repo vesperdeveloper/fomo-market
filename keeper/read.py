@@ -142,23 +142,22 @@ def snapshot_at(token, user_id, when):
     return pnl if isinstance(pnl, (int, float)) and pnl != 0 else None
 
 
-def history_for(token, user_id, days=30):
+def history_for(token, user_id, days=14):
     """
-    Enough past to draw a line.
+    Enough past to draw a line, and no more than that.
 
-    Dense where the interface is dense — hourly over the last two days, which
-    is what the 24h chart and the day's move are read from — and every eight
-    hours before that, which is as coarse as a month can be without the line
-    turning into a staircase. Roughly 130 requests, once per account, ever.
+    This used to fetch a month at hourly detail for the recent part: about a
+    hundred and thirty requests per account, fired back to back. Doing that
+    for nine accounts in a row is what got the reading account's API access
+    revoked — the endpoint is meant to serve a page, not a scraper.
+
+    Now it is fourteen days at eight-hour steps, forty-odd requests, spaced.
+    The five-minute readings fill in the recent detail on their own within a
+    day, so the dense part was never worth asking for.
     """
     now = int(time.time())
-    hour = now // HOUR * HOUR
-    # a day of hourly detail is what the 24h chart reads; everything older is
-    # drawn at eight-hour steps, which is as coarse as a month can be without
-    # the line turning into a staircase
-    wanted = [hour - k * HOUR for k in range(1, 25)]
-    eight = hour // EIGHT_HOURS * EIGHT_HOURS
-    wanted += [eight - k * EIGHT_HOURS for k in range(3, days * 3)]
+    eight = now // EIGHT_HOURS * EIGHT_HOURS
+    wanted = [eight - k * EIGHT_HOURS for k in range(1, days * 3 + 1)]
 
     started = time.monotonic()
     points = []
@@ -170,6 +169,9 @@ def history_for(token, user_id, days=30):
             points.append({"t": datetime.fromtimestamp(when, timezone.utc)
                            .isoformat(timespec="seconds").replace("+00:00", "Z"),
                            "pnl": pnl})
+        # a small gap between calls: this endpoint serves a page, and a
+        # request every few milliseconds does not look like one
+        time.sleep(0.4)
     return points
 
 

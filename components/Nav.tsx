@@ -107,9 +107,11 @@ export default function Nav() {
 
           <Link
             href="/discover"
+            className="nav-cta"
             style={{
               padding: "9px 18px", borderRadius: "var(--r-md)", background: "var(--accent)",
               color: "var(--accent-contrast)", fontWeight: 500, fontSize: ".9375rem",
+              whiteSpace: "nowrap",
               boxShadow: "var(--shadow-accent)",
               transition: "background var(--dur-micro) var(--ease-ui)",
             }}
@@ -122,6 +124,7 @@ export default function Nav() {
       </div>
       <style>{`
         @media (max-width: 1040px){ .nav-links{display:none !important} }
+        @media (max-width: 420px){ .nav-cta{padding:9px 14px !important; font-size:.875rem !important} }
         @media (max-width: 760px){ .nav-ca{display:none !important} }
       `}</style>
     </header>

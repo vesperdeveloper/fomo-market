@@ -288,6 +288,15 @@ a { color: inherit; text-decoration: none; }
 .split, .market-shell { min-width: 0; }
 .split > *, .market-shell > * { min-width: 0; }
 
+/* A contract address truncated with an ellipsis is worse than a short one:
+   the tail is the half people check against the post that sent them. So the
+   narrow screen gets the head-and-tail form, not a cut-off full one. */
+.ca-short { display: none; }
+@media (max-width: 560px) {
+  .ca-full { display: none; }
+  .ca-short { display: inline; }
+}
+
 /* app shell: rail | board | ticket, collapsing to one column */
 .app-shell {
   display: grid;

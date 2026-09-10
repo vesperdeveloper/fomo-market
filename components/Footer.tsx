@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Mark from "./Mark";
+import ContractAddress from "./ContractAddress";
 
 const COLS: [string, [string, string][]][] = [
   ["Market", [["/discover", "Markets"], ["/leaderboard", "Leaderboard"], ["/portfolio", "Portfolio"]]],
@@ -49,14 +50,7 @@ export default function Footer() {
                 <path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.66l7.73-8.84L1.25 2.25h6.83l4.71 6.23zm-1.16 17.52h1.83L7.08 4.13H5.11z" />
               </svg>
             </a>
-            <span className="num" style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "7px 12px", borderRadius: "var(--r-md)",
-              border: "1px dashed var(--border-strong)", fontSize: ".8125rem", color: "var(--fg-muted)",
-            }}>
-              <span style={{ color: "var(--fg-faint)" }}>CA:</span>
-              <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
-            </span>
+            <ContractAddress />
           </div>
         </div>
         {COLS.map(([title, links]) => (

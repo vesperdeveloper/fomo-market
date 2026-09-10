@@ -5,6 +5,7 @@ import { priceOf, multipleOf } from "@/lib/view";
 import TraderCard, { Avatar } from "@/components/TraderCard";
 import Marquee from "@/components/Marquee";
 import Reveal from "@/components/Reveal";
+import ContractAddress from "@/components/ContractAddress";
 
 import { usd, usdShort, pct, cents, moveLabel, followers as fmtF } from "@/lib/format";
 import { SEED_PER_MARKET } from "@/lib/markets";
@@ -158,19 +159,7 @@ export default async function Home() {
 
           {/* the contract address, once there is one to publish */}
           <Reveal delay={260}>
-            <div
-              className="num"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 10,
-                marginTop: "var(--s-6)", padding: "10px 18px",
-                borderRadius: "var(--r-md)", background: "rgba(255,255,255,.06)",
-                border: "1px dashed var(--border-strong)", backdropFilter: "blur(8px)",
-                fontSize: ".9375rem", color: "var(--fg-muted)",
-              }}
-            >
-              <span style={{ color: "var(--fg-faint)" }}>CA:</span>
-              <span style={{ color: "var(--accent-hover)", fontWeight: 500 }}>soon</span>
-            </div>
+            <ContractAddress full size=".9375rem" />
           </Reveal>
         </div>
 
